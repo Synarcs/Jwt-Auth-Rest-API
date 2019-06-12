@@ -1,0 +1,81 @@
+const express = require('express');
+const validator = require('validator');
+const {model,Schema} = require('mongoose');
+const bodyParser = require('body-parser');
+//  enable if extra routes required
+
+// databse stuff user
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
+
+const User = require('./modals/user');
+// database tasks 
+const tasks = require('./modals/task');
+const app = express();
+// rest api and http endpoints 
+app.use('/about',require('../Routes/route'));
+
+app.use(express.json());
+app.post('/users',urlencodedParser,(req,res)=>{
+    const user = new User(req.body);
+    user.save()
+    .then(data=>res.status(201).json(user))
+    .catch(err=>{
+        res.status(400).json(err);
+    })
+});
+
+// get users in db
+app.get('/users',(req,res)=>{
+    const name = req.query;
+    User.find({})
+    .then(response=>res.status(201).send(response))
+    .catch(err=>res.status(500).send('the required file is not found'));
+})
+
+// get user by id 
+app.get('/users/:id',(req,res)=>{
+    const _id = req.params.id;
+    console.log(_id);
+    User.findById(_id)
+    .then(response=>{
+        if(!response){
+            return res.status(404);
+        }
+         res.status(200).send(response);
+    })
+    .catch(err=>res.status(500).send('the required file is not found'));
+})
+
+app.post('/tasks',urlencodedParser,(req,res)=>{
+    const body = req.body;
+    const task_new = new tasks(body)
+    task_new.save().then(data=>{return data}).then(data=>res.status(201).json(task_new)).catch(err=>{
+        res.status(404).json(err);
+    })
+})
+
+// task get requests 
+app.get('/tasks',(req,res)=>{
+    tasks.find({})
+    .then(response=>res.status(200).json(response))
+    .catch(err=>res.status(400).send(err));
+})
+// task get by id method
+app.get('/tasks/:id',(req,res)=>{
+    const _id = req.params.id;
+    tasks.findById(_id)
+    .then(response=>{
+        if(!response){
+            res.redirect(404);
+        }
+        res.status(201).json(response);
+    }).catch(err=>res.status(400).send(err));
+})
+
+port = process.env.PORT || 3000;
+
+
+app.listen(3000,()=>{
+    console.log('server started');
+});
+
